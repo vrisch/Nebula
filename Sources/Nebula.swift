@@ -23,6 +23,29 @@ public enum Change<T> {
         }
     }
     
+    public enum Mode {
+        case all
+        case element
+        case list
+    }
+    
+    public static func changes<S: Sequence>(_ changes: S, _ mode: Mode) -> [T] where S.Element == Change<T> {
+        var result: [T] = []
+        changes.forEach { change in
+            switch change {
+            case let .inserted(value):
+                if mode == .all || mode == .element || mode == .list { result.append(value) }
+            case let .deleted(value):
+                if mode == .all || mode == .list { result.append(value) }
+            case let .unchanged(value):
+                if mode == .all { result.append(value) }
+            case let .updated(value):
+                if mode == .element { result.append(value) }
+            }
+        }
+        return result
+    }
+
     public static func deletions<S: Sequence>(_ changes: S) -> [T] where S.Element == Change<T> {
         var result: [T] = []
         changes.forEach { change in
@@ -60,4 +83,3 @@ public enum Change<T> {
         return result
     }
 }
-
