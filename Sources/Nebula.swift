@@ -64,6 +64,7 @@ public enum Change<T> {
                 result.added.append(change.value)
             default: break
             }
+
             switch change {
             case .inserted, .deleted: hasMovement = true
             default: break
@@ -93,21 +94,8 @@ public enum Change<T> {
     }
 
     public static func count<S: Sequence>(_ changes: S) -> Delta<Int> where S.Element == Change<T> {
-        var result: Delta<Int> = Delta<Int>(changed: 0, added: 0, removed: 0, moved: 0)
-        var hasMovement = false
-        for change in changes {
-            switch change {
-            case .deleted: result.removed += 1
-            case .inserted: result.added += 1
-            case .unchanged: if hasMovement { result.moved += 1 }
-            case .updated: result.changed += 1
-            }
-            switch change {
-            case .inserted, .deleted: hasMovement = true
-            default: break
-            }
-        }
-        return result
+        let delta = self.delta(changes, .element)
+        return Delta<Int>(changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
     }
 
     public static func hasChanges<S: Sequence>(_ changes: S) -> Bool where S.Element == Change<T> {
