@@ -28,26 +28,32 @@ public enum Change<T> {
         case element
         case list
     }
+
+    public struct Delta<T> {
+        public var changed: T
+        public var added: T
+        public var removed: T
+    }
     
     /*
-     * If mode = .all every value is added to the "changes" list regardless of changes status
-     * If mode = .element then inserted and updated are added to the "changed" list, no values are added to "added" and "deleted"
-     * If mode = .list then inserted are added to the "added" list, updated to the "changed" list and deleted to the "deleted" list
+     * If mode = .all every value is added to the "changed" list regardless of changes status
+     * If mode = .element then inserted and updated are added to the "changed" list, no values are added to "added" and "removed"
+     * If mode = .list then inserted are added to the "added" list, updated to the "changed" list and deleted to the "removed" list
      */
-    public static func changes<S: Sequence>(_ changes: S, _ mode: Mode) -> (changed: [T], added: [T], deleted: [T]) where S.Element == Change<T> {
-        var result: (changed: [T], added: [T], deleted: [T]) = (changed: [], added: [], deleted: [])
+    public static func delta<S: Sequence>(_ changes: S, _ mode: Mode) -> Delta<[T]> where S.Element == Change<T> {
+        var result: Delta<[T]> = Delta<[T]>(changed: [], added: [], removed: [])
         changes.forEach { change in
             switch (mode, change) {
             case (.all, _):
-                result.0.append(change.value)
+                result.changed.append(change.value)
             case (.element, .inserted), (.element, .updated):
-                result.0.append(change.value)
+                result.changed.append(change.value)
             case (.list, .deleted):
-                result.2.append(change.value)
+                result.removed.append(change.value)
             case (.list, .inserted):
-                result.1.append(change.value)
+                result.added.append(change.value)
             case (.list, .updated):
-                result.0.append(change.value)
+                result.changed.append(change.value)
             default: break
             }
         }
@@ -74,22 +80,22 @@ public enum Change<T> {
         return result
     }
 
-    public static func count<S: Sequence>(_ changes: S) -> (deleted: Int, inserted: Int, unchanged: Int, updated: Int) where S.Element == Change<T> {
-        var result: (deleted: Int, inserted: Int, unchanged: Int, updated: Int) = (deleted: 0, inserted: 0, unchanged: 0, updated: 0)
+    public static func count<S: Sequence>(_ changes: S) -> Delta<Int> where S.Element == Change<T> {
+        var result: Delta<Int> = Delta<Int>(changed: 0, added: 0, removed: 0)
         for change in changes {
             switch change {
-            case .deleted: result.0 += 1
-            case .inserted: result.1 += 1
-            case .unchanged: result.2 += 1
-            case .updated: result.3 += 1
+            case .deleted: result.removed += 1
+            case .inserted: result.added += 1
+            case .unchanged: break
+            case .updated: result.changed += 1
             }
         }
         return result
     }
 
     public static func hasChanges<S: Sequence>(_ changes: S) -> Bool where S.Element == Change<T> {
-        let (deleted, inserted, _, updated) = count(changes)
-        return deleted > 0 || inserted > 0 || updated > 0
+        let delta = count(changes)
+        return delta.removed > 0 || delta.added > 0 || delta.changed > 0
     }
 
     public static func normalized<S: Sequence>(_ changes: S) -> [Change] where S.Element == Change<T> {
