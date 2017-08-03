@@ -29,18 +29,26 @@ public enum Change<T> {
         case list
     }
     
-    public static func changes<S: Sequence>(_ changes: S, _ mode: Mode) -> [T] where S.Element == Change<T> {
-        var result: [T] = []
+    /*
+     * If mode = .all every value is added to the "changes" list regardless of changes status
+     * If mode = .element then inserted and updated are added to the "changed" list, no values are added to "added" and "deleted"
+     * If mode = .list then inserted are added to the "added" list, updated to the "changed" list and deleted to the "deleted" list
+     */
+    public static func changes<S: Sequence>(_ changes: S, _ mode: Mode) -> (changed: [T], added: [T], deleted: [T]) where S.Element == Change<T> {
+        var result: (changed: [T], added: [T], deleted: [T]) = (changed: [], added: [], deleted: [])
         changes.forEach { change in
-            switch change {
-            case let .inserted(value):
-                if mode == .all || mode == .element || mode == .list { result.append(value) }
-            case let .deleted(value):
-                if mode == .all || mode == .list { result.append(value) }
-            case let .unchanged(value):
-                if mode == .all { result.append(value) }
-            case let .updated(value):
-                if mode == .element { result.append(value) }
+            switch (mode, change) {
+            case (.all, _):
+                result.0.append(change.value)
+            case (.element, .inserted), (.element, .updated):
+                result.0.append(change.value)
+            case (.list, .deleted):
+                result.2.append(change.value)
+            case (.list, .inserted):
+                result.1.append(change.value)
+            case (.list, .updated):
+                result.0.append(change.value)
+            default: break
             }
         }
         return result
