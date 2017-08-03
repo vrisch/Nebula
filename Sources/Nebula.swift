@@ -38,22 +38,27 @@ public enum Change<T> {
     /*
      * If mode = .all every value is added to the "changed" list regardless of changes status
      * If mode = .element then inserted and updated are added to the "changed" list, no values are added to "added" and "removed"
-     * If mode = .list then inserted are added to the "added" list, updated to the "changed" list and deleted to the "removed" list
+     * If mode = .list then inserted are added to the "added" list and deleted to the "removed" list, no values are added to "changed"
      */
     public static func delta<S: Sequence>(_ changes: S, _ mode: Mode) -> Delta<[T]> where S.Element == Change<T> {
         var result: Delta<[T]> = Delta<[T]>(changed: [], added: [], removed: [])
+        var hasMovement = false
         changes.forEach { change in
             switch (mode, change) {
             case (.all, _):
                 result.changed.append(change.value)
             case (.element, .inserted), (.element, .updated):
                 result.changed.append(change.value)
+            case (.element, .unchanged):
+                if hasMovement { result.changed.append(change.value) }
             case (.list, .deleted):
                 result.removed.append(change.value)
             case (.list, .inserted):
                 result.added.append(change.value)
-            case (.list, .updated):
-                result.changed.append(change.value)
+            default: break
+            }
+            switch change {
+            case .inserted, .deleted: hasMovement = true
             default: break
             }
         }
