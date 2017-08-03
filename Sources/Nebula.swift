@@ -94,8 +94,7 @@ public enum Change<T> {
     }
 
     public static func hasChanges<S: Sequence>(_ changes: S) -> Bool where S.Element == Change<T> {
-        let delta = count(changes)
-        return delta.removed > 0 || delta.added > 0 || delta.changed > 0
+        return !count(changes).isEmpty
     }
 
     public static func normalized<S: Sequence>(_ changes: S) -> [Change] where S.Element == Change<T> {
@@ -111,3 +110,18 @@ public enum Change<T> {
         return result
     }
 }
+
+extension Change.Delta where T == Collection {
+    
+    public var isEmpty: Bool {
+        return changed.isEmpty && added.isEmpty && removed.isEmpty
+    }
+}
+
+extension Change.Delta where T == Int {
+    
+    public var isEmpty: Bool {
+        return changed == 0 && added == 0 && removed == 0
+    }
+}
+
