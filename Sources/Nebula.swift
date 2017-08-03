@@ -73,26 +73,6 @@ public enum Change<T> {
         return result
     }
 
-    public static func deletions<S: Sequence>(_ changes: S) -> [T] where S.Element == Change<T> {
-        var result: [T] = []
-        changes.forEach { change in
-            if case let .deleted(value) = change {
-                result.append(value)
-            }
-        }
-        return result
-    }
-    
-    public static func insertions<S: Sequence>(_ changes: S) -> [T] where S.Element == Change<T> {
-        var result: [T] = []
-        changes.forEach { change in
-            if case let .inserted(value) = change {
-                result.append(value)
-            }
-        }
-        return result
-    }
-
     public static func count<S: Sequence>(_ changes: S) -> Delta<Int> where S.Element == Change<T> {
         let delta = self.delta(changes, .element)
         return Delta<Int>(changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
