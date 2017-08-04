@@ -8,12 +8,14 @@
 
 import Foundation
 
-public enum Change<T> {
+public protocol Model {}
+
+public enum Change<T: Model> {
     case deleted(T)
     case inserted(T)
     case unchanged(T)
     case updated(T)
-    
+
     public var value: T {
         switch self {
         case let .deleted(value): return value
@@ -95,5 +97,9 @@ public enum Change<T> {
         }
         return result
     }
+}
+
+extension Change.Delta where T == [Model] {
+    var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
 }
 
