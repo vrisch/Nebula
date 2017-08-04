@@ -10,6 +10,15 @@ import Foundation
 
 public protocol Model {}
 
+public struct Delta<T> {
+    public var changed: T?
+    public var added: T?
+    public var removed: T?
+    public var moved: T?
+
+    public var isEmpty: Bool { return changed == nil && added == nil && removed == nil && moved == nil }
+}
+
 public enum Change<T: Model> {
     case deleted(T)
     case inserted(T)
@@ -31,39 +40,35 @@ public enum Change<T: Model> {
         case list
     }
 
-    public struct Delta<T> {
-        public var changed: T
-        public var added: T
-        public var removed: T
-        public var moved: T
-    }
-
     /*
      * If mode = .all every value is added to the "changed" list regardless of changes status
      * If mode = .element then inserted and updated are added to the "changed" list, no values are added to "added" and "removed"
      * If mode = .list then inserted are added to the "added" list and deleted to the "removed" list, no values are added to "changed"
      */
     public static func delta<S: Sequence>(_ changes: S, _ mode: Mode) -> Delta<[T]> where S.Element == Change<T> {
-        var result: Delta<[T]> = Delta<[T]>(changed: [], added: [], removed: [], moved: [])
+        var changed: [T] = []
+        var added: [T] = []
+        var removed: [T] = []
+        var moved: [T] = []
         var hasMovement = false
         changes.forEach { change in
             switch (mode, change) {
             case (.all, _):
-                result.changed.append(change.value)
+                changed.append(change.value)
 
             case (.element, .deleted):
-                result.removed.append(change.value)
+                removed.append(change.value)
             case (.element, .inserted):
-                result.added.append(change.value)
+                added.append(change.value)
             case (.element, .unchanged):
-                if hasMovement { result.moved.append(change.value) }
+                if hasMovement { moved.append(change.value) }
             case (.element, .updated):
-                result.changed.append(change.value)
+                changed.append(change.value)
 
             case (.list, .deleted):
-                result.removed.append(change.value)
+                removed.append(change.value)
             case (.list, .inserted):
-                result.added.append(change.value)
+                added.append(change.value)
             default: break
             }
 
@@ -72,17 +77,17 @@ public enum Change<T: Model> {
             default: break
             }
         }
-        return result
+        return Delta(changed: (changed.isEmpty ? nil : changed), added: (added.isEmpty ? nil : added), removed: (removed.isEmpty ? nil : removed), moved: (moved.isEmpty ? nil : moved))
     }
 
     public static func count<S: Sequence>(_ changes: S) -> Delta<Int> where S.Element == Change<T> {
         let delta = self.delta(changes, .element)
-        return Delta<Int>(changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
+        return Delta<Int>(changed: delta.changed?.count, added: delta.added?.count, removed: delta.removed?.count, moved: delta.moved?.count)
     }
 
     public static func hasChanges<S: Sequence>(_ changes: S) -> Bool where S.Element == Change<T> {
         let delta = count(changes)
-        return delta.changed > 0 || delta.added > 0 || delta.removed > 0
+        return delta.changed != nil || delta.added != nil || delta.removed != nil
     }
 
     public static func normalized<S: Sequence>(_ changes: S) -> [Change] where S.Element == Change<T> {
@@ -98,8 +103,3 @@ public enum Change<T: Model> {
         return result
     }
 }
-
-extension Change.Delta where T == [Model] {
-    public var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
-}
-
