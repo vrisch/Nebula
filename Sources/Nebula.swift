@@ -100,6 +100,6 @@ public enum Change<T: Model> {
 }
 
 extension Change.Delta where T == [Model] {
-    var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
+    public var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
 }
 
