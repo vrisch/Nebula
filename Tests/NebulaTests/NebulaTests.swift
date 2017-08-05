@@ -19,7 +19,7 @@ class NebulaTests: XCTestCase {
     func testConvertable() {
         var state: [String: Test] = [:]
         let data: [Change<Test>] = []
-        let delta = Change.delta(data, .all)
+        let delta = data.delta(mode: .all)
         delta.changed.forEach { state[$0.id] = $0 }
         XCTAssertEqual(delta.isEmpty, true)
     }
