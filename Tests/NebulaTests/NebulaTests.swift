@@ -20,7 +20,7 @@ class NebulaTests: XCTestCase {
         var state: [String: Test] = [:]
         let data: [Change<Test>] = []
         let delta = Change.delta(data, .all)
-        delta.changed?.forEach { state[$0.id] = $0 }
+        delta.changed.forEach { state[$0.id] = $0 }
         XCTAssertEqual(delta.isEmpty, true)
     }
     

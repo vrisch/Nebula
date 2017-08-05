@@ -11,12 +11,15 @@ import Foundation
 public protocol Model {}
 
 public struct Delta<T> {
-    public var changed: T?
-    public var added: T?
-    public var removed: T?
-    public var moved: T?
+    public var changed: T
+    public var added: T
+    public var removed: T
+    public var moved: T
+}
 
-    public var isEmpty: Bool { return changed == nil && added == nil && removed == nil && moved == nil }
+public extension Delta where T: Collection {
+
+    public var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
 }
 
 public enum Change<T: Model> {
@@ -77,17 +80,17 @@ public enum Change<T: Model> {
             default: break
             }
         }
-        return Delta(changed: (changed.isEmpty ? nil : changed), added: (added.isEmpty ? nil : added), removed: (removed.isEmpty ? nil : removed), moved: (moved.isEmpty ? nil : moved))
+        return Delta(changed: changed, added: added, removed: removed, moved: moved)
     }
 
     public static func count<S: Sequence>(_ changes: S) -> Delta<Int> where S.Element == Change<T> {
         let delta = self.delta(changes, .element)
-        return Delta<Int>(changed: delta.changed?.count, added: delta.added?.count, removed: delta.removed?.count, moved: delta.moved?.count)
+        return Delta<Int>(changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
     }
 
     public static func hasChanges<S: Sequence>(_ changes: S) -> Bool where S.Element == Change<T> {
         let delta = count(changes)
-        return delta.changed != nil || delta.added != nil || delta.removed != nil
+        return delta.changed > 0 || delta.added > 0 || delta.removed > 0
     }
 
     public static func normalized<S: Sequence>(_ changes: S) -> [Change] where S.Element == Change<T> {
