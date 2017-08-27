@@ -54,9 +54,11 @@ extension Sequence {
         var hasMovement = false
         forEach { change in
             switch (mode, change) {
+            case (.all, .deleted):
+                break
             case (.all, _):
                 changed.append(change.value)
-                
+
             case (.element, .deleted):
                 removed.append(change.value)
             case (.element, .inserted):
@@ -65,14 +67,14 @@ extension Sequence {
                 if hasMovement { moved.append(change.value) }
             case (.element, .updated):
                 changed.append(change.value)
-                
+
             case (.list, .deleted):
                 removed.append(change.value)
             case (.list, .inserted):
                 added.append(change.value)
             default: break
             }
-            
+
             switch change {
             case .inserted, .deleted: hasMovement = true
             default: break
