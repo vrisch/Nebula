@@ -27,18 +27,20 @@ public enum Change<T: Model> {
 }
 
 public enum Mode {
-    case all
+    case initial
     case element
     case list
 }
 
 public struct Delta<T> {
+    public let mode: Mode
     public var changed: T
     public var added: T
     public var removed: T
     public var moved: T
-    
-    public init(changed: T, added: T, removed: T, moved: T) {
+
+    public init(mode: Mode, changed: T, added: T, removed: T, moved: T) {
+        self.mode = mode
         self.changed = changed
         self.added = added
         self.removed = removed
@@ -61,9 +63,9 @@ extension Sequence {
         var hasMovement = false
         forEach { change in
             switch (mode, change) {
-            case (.all, .deleted):
+            case (.initial, .deleted):
                 break
-            case (.all, _):
+            case (.initial, _):
                 changed.append(change.value)
 
             case (.element, .deleted):
@@ -87,12 +89,12 @@ extension Sequence {
             default: break
             }
         }
-        return Delta(changed: changed, added: added, removed: removed, moved: moved)
+        return Delta(mode: mode, changed: changed, added: added, removed: removed, moved: moved)
     }
 
     public func count<T>(mode: Mode) -> Delta<Int> where Element == Change<T> {
         let delta = self.delta(mode: mode)
-        return Delta<Int>(changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
+        return Delta<Int>(mode: mode, changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
     }
 
     public func needsNormalization<T>() -> Bool where Element == Change<T> {
