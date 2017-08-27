@@ -37,6 +37,13 @@ public struct Delta<T> {
         case element
         case list
     }
+    
+    public init(changed: T, added: T, removed: T, moved: T) {
+        self.changed = changed
+        self.added = added
+        self.removed = removed
+        self.moved = moved
+    }
 }
 
 public extension Delta where T: Collection {
