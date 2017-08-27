@@ -56,20 +56,18 @@ public struct View<T: Model> {
         self.orderedView = []
     }
     
-    public mutating func process(delta: Delta<[T]>) {
+    public mutating func apply(delta: Delta<[T]>) {
         indexes = Delta(mode: delta.mode, changed: [], added: [], removed: [], moved: [])
-        
+
         guard delta.mode != .initial else {
-            orderedView = delta.changed.map { .unchanged($0) }
-            orderedView = orderedView.sorted(by: { (lhs, rhs) in
-                return areInIncreasingOrder(lhs.value, rhs.value)
-            })
+            orderedView = delta.changed
+            orderedView = orderedView.sorted(by: areInIncreasingOrder)
             return
         }
-        
+
         // Deletes must be processed first, since the indexes are relative to the old content
         delta.removed.forEach { element in
-            if let index = orderedView.index(where: { $0.value == element }) {
+            if let index = orderedView.index(where: { $0 == element }) {
                 indexes.removed.append(index)
             }
         }
@@ -79,54 +77,39 @@ public struct View<T: Model> {
         
         // Now process inserts and changes without recording indexes
         delta.added.forEach { element in
-            orderedView.append(.inserted(element))
+            orderedView.append(element)
         }
         delta.changed.forEach { element in
-            if let index = orderedView.index(where: { $0.value == element }) {
-                orderedView[index] = .updated(element)
+            if let index = orderedView.index(where: { $0 == element }) {
+                orderedView[index] = element
             }
         }
-        
+
         // Sort the new updated content
-        orderedView = orderedView.sorted(by: { (lhs, rhs) in
-            return areInIncreasingOrder(lhs.value, rhs.value)
-        })
-        
+        orderedView = orderedView.sorted(by: areInIncreasingOrder)
+
         // Find the inserted and changed indexes
         delta.added.forEach { element in
-            if let index = orderedView.index(where: { $0.value == element }) {
+            if let index = orderedView.index(where: { $0 == element }) {
                 indexes.added.append(index)
             }
         }
         delta.changed.forEach { element in
-            if let index = orderedView.index(where: { $0.value == element }) {
+            if let index = orderedView.index(where: { $0 == element }) {
                 indexes.changed.append(index)
             }
         }
     }
 
-    private var orderedView: [Change<T>]
+    private var orderedView: [T]
     private let areInIncreasingOrder: (T, T) -> Bool
 }
 
 extension View: Sequence {
-    public typealias Iterator = ViewIterator<T>
-
-    public struct ViewIterator<T: Model>: IteratorProtocol {
-        public typealias Element = T
-        
-        init(_ iterator: IndexingIterator<[Change<T>]>) {
-            self.iterator = iterator
-        }
-        
-        public mutating func next() -> T? {
-            return iterator.next()?.value
-        }
-        private var iterator: IndexingIterator<[Change<T>]>
-    }
+    public typealias Iterator = Array<T>.Iterator
 
     public func makeIterator() -> Iterator {
-        return ViewIterator(orderedView.makeIterator())
+        return orderedView.makeIterator()
     }
 }
 
@@ -142,7 +125,7 @@ extension View: Collection {
     }
     
     public subscript (position: Index) -> Iterator.Element {
-        return orderedView[position].value
+        return orderedView[position]
     }
 
     public func index(after i: Index) -> Index {

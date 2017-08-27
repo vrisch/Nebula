@@ -34,7 +34,7 @@ class NebulaTests: XCTestCase {
         var view = View<String>(by: <)
         let delta = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
 
-        view.process(delta: delta)
+        view.apply(delta: delta)
 
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(view[0], "Apple")
@@ -51,11 +51,11 @@ class NebulaTests: XCTestCase {
         var view = View<String>(by: <)
         let delta1 = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
         
-        view.process(delta: delta1)
+        view.apply(delta: delta1)
         
         let delta2 = Delta<[String]>(mode: .list, changed: [], added: ["Cherry"], removed: [], moved: [])
         
-        view.process(delta: delta2)
+        view.apply(delta: delta2)
         
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry", "Strawberry"])
@@ -70,11 +70,11 @@ class NebulaTests: XCTestCase {
         var view = View<String>(by: <)
         let delta1 = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
         
-        view.process(delta: delta1)
+        view.apply(delta: delta1)
         
         let delta2 = Delta<[String]>(mode: .list, changed: ["Apple"], added: ["Cherry"], removed: ["Strawberry"], moved: [])
 
-        view.process(delta: delta2)
+        view.apply(delta: delta2)
         
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry"])
@@ -89,15 +89,15 @@ class NebulaTests: XCTestCase {
         var view = View<String>(by: <)
         let delta1 = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
         
-        view.process(delta: delta1)
+        view.apply(delta: delta1)
         
         let delta2 = Delta<[String]>(mode: .list, changed: ["Apple"], added: ["Cherry"], removed: ["Strawberry"], moved: [])
         
-        view.process(delta: delta2)
+        view.apply(delta: delta2)
         
         let delta3 = Delta<[String]>(mode: .list, changed: ["Cherry", "Banana"], added: ["Pineapple"], removed: [], moved: [])
         
-        view.process(delta: delta3)
+        view.apply(delta: delta3)
 
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry", "Pineapple"])
