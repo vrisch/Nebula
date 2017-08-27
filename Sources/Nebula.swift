@@ -26,17 +26,17 @@ public enum Change<T: Model> {
     }
 }
 
+public enum Mode {
+    case all
+    case element
+    case list
+}
+
 public struct Delta<T> {
     public var changed: T
     public var added: T
     public var removed: T
     public var moved: T
-    
-    public enum Mode {
-        case all
-        case element
-        case list
-    }
     
     public init(changed: T, added: T, removed: T, moved: T) {
         self.changed = changed
@@ -53,7 +53,7 @@ public extension Delta where T: Collection {
 
 extension Sequence {
 
-    public func delta<T>(mode: Delta<T>.Mode) -> Delta<[T]> where Element == Change<T> {
+    public func delta<T>(mode: Mode) -> Delta<[T]> where Element == Change<T> {
         var changed: [T] = []
         var added: [T] = []
         var removed: [T] = []
@@ -90,7 +90,7 @@ extension Sequence {
         return Delta(changed: changed, added: added, removed: removed, moved: moved)
     }
 
-    public func count<T>(mode: Delta<T>.Mode) -> Delta<Int> where Element == Change<T> {
+    public func count<T>(mode: Mode) -> Delta<Int> where Element == Change<T> {
         let delta = self.delta(mode: mode)
         return Delta<Int>(changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
     }
