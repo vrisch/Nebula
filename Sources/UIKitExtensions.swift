@@ -9,9 +9,9 @@
 import Foundation
 import UIKit
 
-extension UICollectionView {
+public extension UICollectionView {
     
-    func apply(delta: Delta<Int>) {
+    public func apply(delta: Delta<Int>) {
         guard !delta.isEmpty else { return }
         
         switch delta.mode {
