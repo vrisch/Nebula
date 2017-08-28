@@ -50,6 +50,22 @@ public struct Delta<T> {
     }
 }
 
+public struct Count {
+    public let mode: Mode
+    public var changed: Int
+    public var added: Int
+    public var removed: Int
+    public var moved: Int
+    
+    public init(mode: Mode = .initial, changed: Int = 0, added: Int = 0, removed: Int = 0, moved: Int = 0) {
+        self.mode = mode
+        self.changed = changed
+        self.added = added
+        self.removed = removed
+        self.moved = moved
+    }
+}
+
 public struct View<T: Model> {
     public var indexes = Delta<Int>()
 

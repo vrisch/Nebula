@@ -43,6 +43,13 @@ extension Delta: CustomStringConvertible {
     }
 }
 
+extension Count: CustomStringConvertible {
+
+    public var description: String {
+        return "Δ:\(mode), \(changed) changed, \(added) added, \(removed) removed, \(moved) moved"
+    }
+}
+
 extension Sequence {
 
     public func delta<T>(mode: Mode) -> Delta<T> where Element == Change<T> {
@@ -82,16 +89,16 @@ extension Sequence {
         return Delta(mode: mode, changed: changed, added: added, removed: removed, moved: moved)
     }
     
-    public func count<T>(mode: Mode) -> Delta<Int> where Element == Change<T> {
+    public func count<T>(mode: Mode) -> Count where Element == Change<T> {
         let delta = self.delta(mode: mode)
-        return Delta<Int>(mode: mode, changed: [delta.changed.count], added: [delta.added.count], removed: [delta.removed.count], moved: [delta.moved.count])
+        return Count(mode: mode, changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
     }
-    
+
     public func needsNormalization<T>() -> Bool where Element == Change<T> {
         let count = self.count(mode: .element)
-        return count.changed.first! > 0 || count.added.first! > 0 || count.removed.first! > 0
+        return count.changed > 0 || count.added > 0 || count.removed > 0
     }
-    
+
     public func normalized<T>() -> [Change<T>] where Element == Change<T> {
         var result: [Change<T>] = []
         forEach { change in
