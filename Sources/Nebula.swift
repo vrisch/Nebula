@@ -26,7 +26,7 @@ public enum Change<T: Model> {
     }
 }
 
-public enum Mode {
+public enum Mode: String {
     case initial
     case element
     case list
@@ -34,12 +34,14 @@ public enum Mode {
 
 public struct Delta<T> {
     public let mode: Mode
-    public var changed: T
-    public var added: T
-    public var removed: T
-    public var moved: T
+    public var changed: [T]
+    public var added: [T]
+    public var removed: [T]
+    public var moved: [T]
+    
+    public var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
 
-    public init(mode: Mode, changed: T, added: T, removed: T, moved: T) {
+    public init(mode: Mode = .initial, changed: [T] = [], added: [T] = [], removed: [T] = [], moved: [T] = []) {
         self.mode = mode
         self.changed = changed
         self.added = added
@@ -49,15 +51,15 @@ public struct Delta<T> {
 }
 
 public struct View<T: Model> {
-    public var indexes: Delta<[Int]> = Delta(mode: .initial, changed: [], added: [], removed: [], moved: [])
+    public var indexes = Delta<Int>()
 
     public init(by areInIncreasingOrder: @escaping (T, T) -> Bool) {
         self.areInIncreasingOrder = areInIncreasingOrder
         self.orderedView = []
     }
     
-    public mutating func apply(delta: Delta<[T]>) {
-        indexes = Delta(mode: delta.mode, changed: [], added: [], removed: [], moved: [])
+    public mutating func apply(delta: Delta<T>) {
+        indexes = Delta(mode: delta.mode)
 
         guard delta.mode != .initial else {
             orderedView = delta.changed
@@ -101,102 +103,6 @@ public struct View<T: Model> {
         }
     }
 
-    private var orderedView: [T]
+    internal var orderedView: [T]
     private let areInIncreasingOrder: (T, T) -> Bool
-}
-
-extension View: Sequence {
-    public typealias Iterator = Array<T>.Iterator
-
-    public func makeIterator() -> Iterator {
-        return orderedView.makeIterator()
-    }
-}
-
-extension View: Collection {
-    public typealias Index = Int
-    
-    public var startIndex: Index {
-        return orderedView.startIndex
-    }
-    
-    public var endIndex: Index {
-        return orderedView.endIndex
-    }
-    
-    public subscript (position: Index) -> Iterator.Element {
-        return orderedView[position]
-    }
-
-    public func index(after i: Index) -> Index {
-        return orderedView.index(after: i)
-    }
-}
-
-public extension Delta where T: Collection {
-    
-    public var isEmpty: Bool { return changed.isEmpty && added.isEmpty && removed.isEmpty && moved.isEmpty }
-}
-
-extension Sequence {
-
-    public func delta<T>(mode: Mode) -> Delta<[T]> where Element == Change<T> {
-        var changed: [T] = []
-        var added: [T] = []
-        var removed: [T] = []
-        var moved: [T] = []
-        var hasMovement = false
-        forEach { change in
-            switch (mode, change) {
-            case (.initial, .deleted):
-                break
-            case (.initial, _):
-                changed.append(change.value)
-
-            case (.element, .deleted):
-                removed.append(change.value)
-            case (.element, .inserted):
-                added.append(change.value)
-            case (.element, .unchanged):
-                if hasMovement { moved.append(change.value) }
-            case (.element, .updated):
-                changed.append(change.value)
-
-            case (.list, .deleted):
-                removed.append(change.value)
-            case (.list, .inserted):
-                added.append(change.value)
-            default: break
-            }
-
-            switch change {
-            case .inserted, .deleted: hasMovement = true
-            default: break
-            }
-        }
-        return Delta(mode: mode, changed: changed, added: added, removed: removed, moved: moved)
-    }
-
-    public func count<T>(mode: Mode) -> Delta<Int> where Element == Change<T> {
-        let delta = self.delta(mode: mode)
-        return Delta<Int>(mode: mode, changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
-    }
-
-    public func needsNormalization<T>() -> Bool where Element == Change<T> {
-        let delta = count(mode: .element)
-        return delta.changed > 0 || delta.added > 0 || delta.removed > 0
-    }
-
-    public func normalized<T>() -> [Change<T>] where Element == Change<T> {
-        var result: [Change<T>] = []
-        forEach { change in
-            switch change {
-            case .deleted: break
-            case let .inserted(value): result.append(.unchanged(value))
-            case let .unchanged(value): result.append(.unchanged(value))
-            case let .updated(value): result.append(.unchanged(value))
-            }
-        }
-        return result
-    }
 }

@@ -17,6 +17,8 @@
 		8933C7901EB5B82D000D00A4 /* NebulaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7891EB5B82A000D00A4 /* NebulaTests.swift */; };
 		DD7502881C68FEDE006590AF /* Nebula.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6DA0F1BF000BD002C0205 /* Nebula.framework */; };
 		DD7502921C690C7A006590AF /* Nebula.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D9F01BEFFFBE002C0205 /* Nebula.framework */; };
+		F7A2C6621F541F0A007AC37B /* UIKitExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6611F541F0A007AC37B /* UIKitExtensions.swift */; };
+		F7A2C6641F541F46007AC37B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6631F541F46007AC37B /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +57,8 @@
 		AD2FAA281CD0B6E100659CF4 /* NebulaTests.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = NebulaTests.plist; sourceTree = "<group>"; };
 		DD75027A1C68FCFC006590AF /* Nebula-macOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Nebula-macOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD75028D1C690C7A006590AF /* Nebula-tvOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Nebula-tvOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F7A2C6611F541F0A007AC37B /* UIKitExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitExtensions.swift; sourceTree = "<group>"; };
+		F7A2C6631F541F46007AC37B /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +154,8 @@
 			isa = PBXGroup;
 			children = (
 				8933C7841EB5B820000D00A4 /* Nebula.swift */,
+				F7A2C6631F541F46007AC37B /* Extensions.swift */,
+				F7A2C6611F541F0A007AC37B /* UIKitExtensions.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -459,6 +465,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7A2C6621F541F0A007AC37B /* UIKitExtensions.swift in Sources */,
+				F7A2C6641F541F46007AC37B /* Extensions.swift in Sources */,
 				8933C7851EB5B820000D00A4 /* Nebula.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
