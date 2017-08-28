@@ -89,7 +89,10 @@ public struct View<T: Model> {
                 indexes.removed.append(index)
             }
         }
-        
+
+        // Sort removed indexes
+        indexes.removed = indexes.removed.sorted(by: <)
+
         // Now that the removed indexes are recorded, we can go ahead and delete the elements (in reverse order)
         indexes.removed.reversed().forEach { orderedView.remove(at: $0) }
         
@@ -117,6 +120,10 @@ public struct View<T: Model> {
                 indexes.changed.append(index)
             }
         }
+        
+        // Sort added and changed indexes
+        indexes.added = indexes.added.sorted(by: <)
+        indexes.changed = indexes.changed.sorted(by: <)
     }
 
     internal var orderedView: [T]

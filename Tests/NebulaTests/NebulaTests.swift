@@ -32,7 +32,7 @@ class NebulaTests: XCTestCase {
     
     func testView1() {
         var view = View<String>(by: <)
-        let delta = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
+        let delta = Delta<String>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
 
         view.apply(delta: delta)
 
@@ -49,11 +49,11 @@ class NebulaTests: XCTestCase {
     
     func testView2() {
         var view = View<String>(by: <)
-        let delta1 = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
+        let delta1 = Delta<String>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
         
         view.apply(delta: delta1)
         
-        let delta2 = Delta<[String]>(mode: .list, changed: [], added: ["Cherry"], removed: [], moved: [])
+        let delta2 = Delta<String>(mode: .list, changed: [], added: ["Cherry"], removed: [], moved: [])
         
         view.apply(delta: delta2)
         
@@ -68,11 +68,11 @@ class NebulaTests: XCTestCase {
     
     func testView3() {
         var view = View<String>(by: <)
-        let delta1 = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
+        let delta1 = Delta<String>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
         
         view.apply(delta: delta1)
         
-        let delta2 = Delta<[String]>(mode: .list, changed: ["Apple"], added: ["Cherry"], removed: ["Strawberry"], moved: [])
+        let delta2 = Delta<String>(mode: .list, changed: ["Apple"], added: ["Cherry"], removed: ["Strawberry"], moved: [])
 
         view.apply(delta: delta2)
         
@@ -87,24 +87,43 @@ class NebulaTests: XCTestCase {
     
     func testView4() {
         var view = View<String>(by: <)
-        let delta1 = Delta<[String]>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
+        let delta1 = Delta<String>(mode: .initial, changed: ["Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
         
         view.apply(delta: delta1)
         
-        let delta2 = Delta<[String]>(mode: .list, changed: ["Apple"], added: ["Cherry"], removed: ["Strawberry"], moved: [])
+        let delta2 = Delta<String>(mode: .list, changed: ["Apple"], added: ["Cherry"], removed: ["Strawberry"], moved: [])
         
         view.apply(delta: delta2)
         
-        let delta3 = Delta<[String]>(mode: .list, changed: ["Cherry", "Banana"], added: ["Pineapple"], removed: [], moved: [])
+        let delta3 = Delta<String>(mode: .list, changed: ["Cherry", "Banana"], added: ["Pineapple"], removed: [], moved: [])
         
         view.apply(delta: delta3)
 
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry", "Pineapple"])
         XCTAssertEqual(view.indexes.mode, .list)
-        XCTAssertEqual(view.indexes.changed, [2, 1])
+        XCTAssertEqual(view.indexes.changed, [1, 2])
         XCTAssertEqual(view.indexes.added, [3])
         XCTAssertEqual(view.indexes.removed, [])
+        XCTAssertEqual(view.indexes.moved, [])
+    }
+    
+    func testView5() {
+        var view = View<String>(by: <)
+        let delta1 = Delta<String>(mode: .initial, changed: ["Pineapple", "Cherry", "Banana", "Apple", "Strawberry"], added: [], removed: [], moved: [])
+        
+        view.apply(delta: delta1)
+        
+        let delta2 = Delta<String>(mode: .list, removed: ["Cherry", "Strawberry", "Pineapple", "Apple"])
+        
+        view.apply(delta: delta2)
+        
+        XCTAssertEqual(view.isEmpty, false)
+        XCTAssertEqual(Array(view), ["Banana"])
+        XCTAssertEqual(view.indexes.mode, .list)
+        XCTAssertEqual(view.indexes.changed, [])
+        XCTAssertEqual(view.indexes.added, [])
+        XCTAssertEqual(view.indexes.removed, [0, 2, 3, 4])
         XCTAssertEqual(view.indexes.moved, [])
     }
 
