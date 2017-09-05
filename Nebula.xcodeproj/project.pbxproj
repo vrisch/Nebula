@@ -19,6 +19,10 @@
 		DD7502921C690C7A006590AF /* Nebula.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D9F01BEFFFBE002C0205 /* Nebula.framework */; };
 		F7A2C6621F541F0A007AC37B /* UIKitExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6611F541F0A007AC37B /* UIKitExtensions.swift */; };
 		F7A2C6641F541F46007AC37B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6631F541F46007AC37B /* Extensions.swift */; };
+		F7F7215F1F5ECF0A00EA2877 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6631F541F46007AC37B /* Extensions.swift */; };
+		F7F721601F5ECF0A00EA2877 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6631F541F46007AC37B /* Extensions.swift */; };
+		F7F721611F5ECF0B00EA2877 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6631F541F46007AC37B /* Extensions.swift */; };
+		F7F721621F5ECF1400EA2877 /* UIKitExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A2C6611F541F0A007AC37B /* UIKitExtensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -484,6 +488,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8933C7871EB5B820000D00A4 /* Nebula.swift in Sources */,
+				F7F721601F5ECF0A00EA2877 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,6 +497,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8933C7881EB5B820000D00A4 /* Nebula.swift in Sources */,
+				F7F721611F5ECF0B00EA2877 /* Extensions.swift in Sources */,
+				F7F721621F5ECF1400EA2877 /* UIKitExtensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -500,6 +507,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8933C7861EB5B820000D00A4 /* Nebula.swift in Sources */,
+				F7F7215F1F5ECF0A00EA2877 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
