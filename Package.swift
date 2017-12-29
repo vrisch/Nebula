@@ -8,12 +8,8 @@ let package = Package(
             name: "Nebula",
             targets: ["Nebula"]),
         ],
-    dependencies: [
-        .package(url: "https://github.com/vrisch/Orbit.git", .branch("develop")),
-        ],
     targets: [
         .target(
-            name: "Nebula",
-            dependencies: ["Orbit"]),
+            name: "Nebula")
         ]
 )
