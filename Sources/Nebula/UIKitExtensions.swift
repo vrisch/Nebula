@@ -21,7 +21,9 @@
                     insertItems(at: delta.added.map { IndexPath(item: $0, section: 0) })
                     reloadItems(at: delta.changed.map { IndexPath(item: $0, section: 0) })
                     deleteItems(at: delta.removed.map { IndexPath(item: $0, section: 0) })
-                }, completion: nil)
+                }) { [collectionViewLayout] _ in
+                    collectionViewLayout.invalidateLayout()
+                }
             }
         }
     }
