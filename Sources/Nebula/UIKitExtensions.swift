@@ -15,7 +15,8 @@ public extension UICollectionView {
         guard !delta.isEmpty else { return }
         
         switch delta.mode {
-        case .initial: reloadData()
+        case .initial:
+            reloadData()
         case .list, .element:
             performBatchUpdates({
                 insertItems(at: delta.added.map { IndexPath(item: $0, section: 0) })
