@@ -48,6 +48,14 @@ public struct Delta<T> {
         self.removed = removed
         self.moved = moved
     }
+
+    public init(mode: Mode, delta: Delta<T>) {
+        self.mode = mode
+        self.changed = delta.changed
+        self.added = delta.added
+        self.removed = delta.removed
+        self.moved = delta.moved
+    }
 }
 
 public struct Count {
@@ -73,7 +81,11 @@ public struct View<T: Model> {
         self.areInIncreasingOrder = areInIncreasingOrder
         self.orderedView = []
     }
-    
+
+    public func indexes(mode: Mode) -> Delta<Int> {
+        return Delta<Int>(mode: mode, delta: indexes)
+    }
+
     public mutating func apply(delta: Delta<T>) {
         indexes = Delta(mode: delta.mode)
 
