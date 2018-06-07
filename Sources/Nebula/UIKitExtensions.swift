@@ -16,8 +16,10 @@ public extension UICollectionView {
         
         switch delta.mode {
         case .initial:
+            print("NEBULA: Reloading data")
             reloadData()
         case .list, .element:
+            print("NEBULA: Batch updating")
             performBatchUpdates({
                 insertItems(at: delta.added.map { IndexPath(item: $0, section: 0) })
                 reloadItems(at: delta.changed.map { IndexPath(item: $0, section: 0) })
