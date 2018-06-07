@@ -12,8 +12,9 @@ import UIKit
 public extension UICollectionView {
     
     public func apply(delta: Delta<Int>) {
+        print("NEBULA: Empty check: \(delta.isEmpty)")
         guard !delta.isEmpty else { return }
-        
+
         switch delta.mode {
         case .initial:
             print("NEBULA: Reloading data")

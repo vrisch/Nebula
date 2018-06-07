@@ -83,6 +83,9 @@ public struct View<T: Model> {
     }
 
     public func indexes(mode: Mode) -> Delta<Int> {
+        if mode == .initial {
+            return Delta<Int>(changed: orderedView.enumerated().map { $0.0 })
+        }
         return Delta<Int>(mode: mode, delta: indexes)
     }
 
