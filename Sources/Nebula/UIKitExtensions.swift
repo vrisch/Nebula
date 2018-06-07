@@ -12,15 +12,12 @@ import UIKit
 public extension UICollectionView {
     
     public func apply(delta: Delta<Int>) {
-        print("NEBULA: Empty check: \(delta.isEmpty)")
         guard !delta.isEmpty else { return }
 
         switch delta.mode {
         case .initial:
-            print("NEBULA: Reloading data")
             reloadData()
         case .list, .element:
-            print("NEBULA: Batch updating")
             performBatchUpdates({
                 insertItems(at: delta.added.map { IndexPath(item: $0, section: 0) })
                 reloadItems(at: delta.changed.map { IndexPath(item: $0, section: 0) })
