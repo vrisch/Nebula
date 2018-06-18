@@ -10,17 +10,17 @@
 import UIKit
 
 public extension UICollectionView {
-    
-    public func apply(delta: Delta<Int>) {
+
+    public func apply(delta: Delta<IndexPath>) {
         switch delta.mode {
         case .initial:
             reloadData()
         case .list, .element:
             guard !delta.isEmpty else { return }
             performBatchUpdates({
-                insertItems(at: delta.added.map { IndexPath(item: $0, section: 0) })
-                reloadItems(at: delta.changed.map { IndexPath(item: $0, section: 0) })
-                deleteItems(at: delta.removed.map { IndexPath(item: $0, section: 0) })
+                insertItems(at: delta.added.map { $0 })
+                reloadItems(at: delta.changed.map { $0 })
+                deleteItems(at: delta.removed.map { $0 })
             }) { [collectionViewLayout] _ in
                 collectionViewLayout.invalidateLayout()
             }

@@ -8,9 +8,7 @@
 
 import Foundation
 
-public protocol Model: Equatable {}
-
-public enum Change<T: Model> {
+public enum Change<T: Equatable> {
     case deleted(T)
     case inserted(T)
     case unchanged(T)
@@ -74,25 +72,23 @@ public struct Count {
     }
 }
 
-public struct View<T: Model> {
-    public var indexes = Delta<Int>()
-
-    public init(by areInIncreasingOrder: @escaping (T, T) -> Bool) {
+public struct View<T: Equatable> {
+   public init(by areInIncreasingOrder: @escaping (T, T) -> Bool) {
         self.areInIncreasingOrder = areInIncreasingOrder
         self.orderedView = []
     }
 
-    public func indexes(mode: Mode) -> Delta<Int> {
+    public func indexes(mode: Mode) -> Delta<IndexPath> {
         if mode == .initial {
-            return Delta<Int>(changed: orderedView.enumerated().map { $0.0 })
+            return Delta<IndexPath>(changed: orderedView.enumerated().map { IndexPath(item:  $0.0, section: 0) })
         }
-        return Delta<Int>(mode: mode, delta: indexes)
+        return Delta<IndexPath>(mode: mode, delta: indexes)
     }
 
     public mutating func apply(delta: Delta<T>) {
         indexes = Delta(mode: delta.mode)
 
-        guard delta.mode != .initial else {
+       guard delta.mode != .initial else {
             orderedView = delta.changed
             orderedView = orderedView.sorted(by: areInIncreasingOrder)
             return
@@ -101,7 +97,7 @@ public struct View<T: Model> {
         // Deletes must be processed first, since the indexes are relative to the old content
         delta.removed.forEach { element in
             if let index = orderedView.index(where: { $0 == element }) {
-                indexes.removed.append(index)
+                indexes.removed.append(IndexPath(item: index, section: 0))
             }
         }
 
@@ -109,7 +105,7 @@ public struct View<T: Model> {
         indexes.removed = indexes.removed.sorted(by: <)
 
         // Now that the removed indexes are recorded, we can go ahead and delete the elements (in reverse order)
-        indexes.removed.reversed().forEach { orderedView.remove(at: $0) }
+        indexes.removed.reversed().forEach { orderedView.remove(at: $0.item ) }
         
         // Now process inserts and changes without recording indexes
         delta.added.forEach { element in
@@ -127,12 +123,12 @@ public struct View<T: Model> {
         // Find the inserted and changed indexes
         delta.added.forEach { element in
             if let index = orderedView.index(where: { $0 == element }) {
-                indexes.added.append(index)
+                indexes.added.append(IndexPath(item: index, section: 0))
             }
         }
         delta.changed.forEach { element in
             if let index = orderedView.index(where: { $0 == element }) {
-                indexes.changed.append(index)
+                indexes.changed.append(IndexPath(item: index, section: 0))
             }
         }
         
@@ -142,5 +138,6 @@ public struct View<T: Model> {
     }
 
     internal var orderedView: [T]
+    private var indexes = Delta<IndexPath>()
     private let areInIncreasingOrder: (T, T) -> Bool
 }
