@@ -62,6 +62,7 @@
 		AD2FAA281CD0B6E100659CF4 /* NebulaTests.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = NebulaTests.plist; sourceTree = "<group>"; };
 		DD75027A1C68FCFC006590AF /* Nebula-macOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Nebula-macOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD75028D1C690C7A006590AF /* Nebula-tvOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Nebula-tvOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F702D26220DAC51F0026BC36 /* Nebula.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = Nebula.playground; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		F70C7EF91FAC6BCE0000E4C3 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extensions.swift; path = Nebula/Extensions.swift; sourceTree = "<group>"; };
 		F70C7EFA1FAC6BCF0000E4C3 /* Nebula.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Nebula.swift; path = Nebula/Nebula.swift; sourceTree = "<group>"; };
 		F70C7EFB1FAC6BCF0000E4C3 /* UIKitExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIKitExtensions.swift; path = Nebula/UIKitExtensions.swift; sourceTree = "<group>"; };
@@ -128,6 +129,7 @@
 		52D6D9721BEFF229002C0205 = {
 			isa = PBXGroup;
 			children = (
+				F702D26220DAC51F0026BC36 /* Nebula.playground */,
 				F70C7F121FAC6BE50000E4C3 /* Cartfile */,
 				F70C7F111FAC6BE50000E4C3 /* Package.swift */,
 				8933C7811EB5B7E0000D00A4 /* Sources */,

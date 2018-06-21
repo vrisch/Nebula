@@ -30,7 +30,7 @@ public enum Mode: String {
     case list
 }
 
-public struct Delta<T> {
+public struct Delta<T: Equatable> {
     public let mode: Mode
     public var changed: [T]
     public var added: [T]
