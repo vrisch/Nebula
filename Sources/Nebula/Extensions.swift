@@ -12,46 +12,58 @@ extension View: Sequence {
     public typealias Iterator = Array<T>.Iterator
     
     public func makeIterator() -> Iterator {
-        return orderedView.makeIterator()
+        return items.makeIterator()
     }
 }
 
 extension View: Collection {
-    public typealias Index = Int
+    public typealias Index = IndexPath
     
-    public var startIndex: Index {
-        return orderedView.startIndex
+    public var startIndex: IndexPath {
+        return IndexPath(item: 0, section: 0)
     }
-    
-    public var endIndex: Index {
-        return orderedView.endIndex
+
+    public var endIndex: IndexPath {
+        guard let last = groups.last else { fatalError() }
+        return IndexPath(item: last.upperBound, section: groups.count - 1)
     }
-    
-    public subscript (position: Index) -> Iterator.Element {
-        return orderedView[position]
+
+    public subscript (position: IndexPath) -> Iterator.Element {
+        return items[indexFor(position)]
     }
-    
-    public func index(after i: Index) -> Index {
-        return orderedView.index(after: i)
+
+    public func index(after i: IndexPath) -> IndexPath {
+        let range = rangeOf(group: i.section)
+        if range.lowerBound + i.item < range.upperBound {
+            return IndexPath(item: range.lowerBound + i.item + 1, section: i.section)
+        } else {
+            let range = rangeOf(group: i.section + 1)
+            return IndexPath(item: range.lowerBound + i.item, section: i.section + 1)
+        }
     }
 }
 
 extension Delta: CustomStringConvertible {
     
     public var description: String {
-        return "Δ:\(mode), \(changed.count) changed, \(added.count) added, \(removed.count) removed, \(moved.count) moved"
+        switch self {
+        case let .initial(items): return "Δ:initial: \(items.count)"
+        case let .list(added, removed): return "Δ:list: \(added.count) added, \(removed.count) removed"
+        case let .element(added, removed, changed, moved): return "Δ:element: \(added.count) added, \(removed.count) removed, \(changed.count) changed, \(moved.count) moved"
+        }
+        
     }
 }
 
-extension Count: CustomStringConvertible {
-
+extension Diff: CustomStringConvertible where T == Int {
+    
     public var description: String {
-        return "Δ:\(mode), \(changed) changed, \(added) added, \(removed) removed, \(moved) moved"
+        return "∑: \(added) added, \(removed) removed, \(changed) changed, \(moved) moved"
     }
 }
 
 extension Sequence {
-
+    
     public func delta<T>(mode: Mode) -> Delta<T> where Element == Change<T> {
         var changed: [T] = []
         var added: [T] = []
@@ -86,19 +98,27 @@ extension Sequence {
             default: break
             }
         }
-        return Delta(mode: mode, changed: changed, added: added, removed: removed, moved: moved)
+        switch mode {
+        case .initial: return .initial(changed)
+        case .list: return .list(added: added, removed: removed)
+        case .element: return .element(added: added, removed: removed, changed: changed, moved: moved)
+        }
     }
     
     public func count<T>(mode: Mode) -> Count where Element == Change<T> {
-        let delta = self.delta(mode: mode)
-        return Count(mode: mode, changed: delta.changed.count, added: delta.added.count, removed: delta.removed.count, moved: delta.moved.count)
+        switch self.delta(mode: mode) {
+        case let .initial(items): return Count(added: items.count, removed: 0, changed: 0, moved: 0)
+        case let .list(added, removed): return Count(added: added.count, removed: removed.count, changed: 0, moved: 0)
+        case let .element(added, removed, changed, moved):
+            return Count(added: added.count, removed: removed.count, changed: changed.count, moved: moved.count)
+        }
     }
-
+    
     public func needsNormalization<T>() -> Bool where Element == Change<T> {
         let count = self.count(mode: .element)
         return count.changed > 0 || count.added > 0 || count.removed > 0
     }
-
+    
     public func normalized<T>() -> [Change<T>] where Element == Change<T> {
         var result: [Change<T>] = []
         forEach { change in
