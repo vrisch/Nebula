@@ -14,17 +14,7 @@ PlaygroundPage.current.liveView = liveView
 
 extension CIColor: Comparable {
 
-    static func group(_ color: CIColor) -> Int {
-        switch color.red {
-        case 0.8...: return 0
-        default: return 1
-        }
-    }
-
     public static func < (lhs: CIColor, rhs: CIColor) -> Bool {
-        let lg = group(lhs)
-        let rg = group(rhs)
-        guard lg == rg else { return lg < rg }
         return lhs.red < rhs.red && lhs.green < rhs.green && lhs.blue < rhs.blue
     }
     
@@ -60,28 +50,11 @@ extension Delta where T == CIColor {
     }
 }
 
-var view = View<CIColor>(order: <, group: CIColor.group)
+var view = View<CIColor>(order: <)
 
-class DataSource: NSObject, UICollectionViewDataSource {
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        print("checking number of groups")
-        return view.numberOfGroups
-    }
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        print("checking range of group \(section)")
-        let count = view.rangeOf(group: section).count - 1
-        print("numberOfItemsInSection is \(count)")
-        return count
-    }
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath)
-        print("cell check groups \(indexPath.section < view.numberOfGroups)")
-        print("cell for \(indexPath)")
-        cell.contentView.backgroundColor = UIColor(ciColor: view[indexPath])
-        return cell
-    }
+let dataSource = ViewDataSource(view: view, reuseIdentifier: "Cell") { (color: CIColor, cell: UICollectionViewCell) in
+    cell.contentView.backgroundColor = UIColor(ciColor: color)
 }
-let dataSource = DataSource()
 liveView.dataSource = dataSource
 
 let delta: Delta<CIColor> = .initial([.random(), .random(), .random()])

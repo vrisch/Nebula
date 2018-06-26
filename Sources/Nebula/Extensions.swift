@@ -17,29 +17,22 @@ extension View: Sequence {
 }
 
 extension View: Collection {
-    public typealias Index = IndexPath
+    public typealias Index = Int
     
-    public var startIndex: IndexPath {
-        return IndexPath(item: 0, section: 0)
+    public var startIndex: Int {
+        return items.startIndex
     }
 
-    public var endIndex: IndexPath {
-        guard let last = groups.last else { fatalError() }
-        return IndexPath(item: last.upperBound, section: groups.count - 1)
+    public var endIndex: Int {
+        return items.endIndex
     }
 
-    public subscript (position: IndexPath) -> Iterator.Element {
-        return items[indexFor(position)]
+    public subscript (position: Int) -> Iterator.Element {
+        return items[position]
     }
 
-    public func index(after i: IndexPath) -> IndexPath {
-        let range = rangeOf(group: i.section)
-        if range.lowerBound + i.item < range.upperBound {
-            return IndexPath(item: range.lowerBound + i.item + 1, section: i.section)
-        } else {
-            let range = rangeOf(group: i.section + 1)
-            return IndexPath(item: range.lowerBound + i.item, section: i.section + 1)
-        }
+    public func index(after i: Int) -> Int {
+        return items.index(after: i)
     }
 }
 

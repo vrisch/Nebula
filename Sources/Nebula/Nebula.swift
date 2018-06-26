@@ -60,25 +60,23 @@ public struct Diff<T: Equatable> {
 
 public typealias Count = Diff<Int>
 
-public struct View<T: Equatable> {
-    public init(order: @escaping (T, T) -> Bool, group: @escaping (T) -> Int = { _ in 0 }) {
+public final class View<T: Equatable> {
+    public init(order: @escaping (T, T) -> Bool) {
         self.orderBy = order
-        self.groupBy = group
-        self.groups = []
         self.items = []
-        self.indexes = Diff<[IndexPath]>(added: [], removed: [], changed: [], moved: [])
+        self.indexes = Diff<[Int]>(added: [], removed: [], changed: [], moved: [])
     }
     
-    public func indexes(mode: Mode) -> Delta<IndexPath> {
+    public func indexes(mode: Mode) -> Delta<Int> {
         switch mode {
-        case .initial: return .initial(items.enumerated().map { indexPathFor($0.0) })
+        case .initial: return .initial(items.enumerated().map { $0.0 })
         case .list: return .list(added: indexes.added, removed: indexes.removed)
         case .element: return .element(added: indexes.added, removed: indexes.removed, changed: indexes.changed, moved: indexes.moved)
         }
     }
     
-    public mutating func apply(delta: Delta<T>) {
-        indexes = Diff<[IndexPath]>(added: [], removed: [], changed: [], moved: [])
+    public func apply(delta: Delta<T>) {
+        indexes = Diff<[Int]>(added: [], removed: [], changed: [], moved: [])
         
         switch delta {
         case let .initial(items):
@@ -89,12 +87,13 @@ public struct View<T: Equatable> {
             process(added: added, removed: removed, changed: changed, moved: moved)
         }
     }
-    
-    private mutating func process(added: [T], removed: [T], changed: [T], moved: [T]) {
+
+
+    private func process(added: [T], removed: [T], changed: [T], moved: [T]) {
         // Deletes must be processed first, since the indexes are relative to the old content
         removed.forEach { element in
             if let index = items.index(where: { $0 == element }) {
-                indexes.removed.append(indexPathFor(index))
+                indexes.removed.append(index)
             }
         }
 
@@ -102,7 +101,7 @@ public struct View<T: Equatable> {
         indexes.removed = indexes.removed.sorted(by: <)
         
         // Now that the removed indexes are recorded, we can go ahead and delete the elements (in reverse order)
-        indexes.removed.reversed().forEach { items.remove(at: indexFor($0) ) }
+        indexes.removed.reversed().forEach { items.remove(at: $0) }
 
         // Now process inserts and changes without recording indexes
         added.forEach { element in
@@ -116,36 +115,16 @@ public struct View<T: Equatable> {
         
         // Sort the new updated content
         items = items.sorted(by: orderBy)
-        
-        // Group items
-        groups.removeAll()
-        if let first = items.first {
-            var startIndex = 0
-            var currentIndex = 0
-            var currentGroup = groupBy(first)
-            items.forEach { item in
-                let group = groupBy(item)
-                if currentGroup != group {
-                    groups.append(startIndex...currentIndex)
-                    startIndex = currentIndex
-                    currentGroup = group
-                }
-                currentIndex += 1
-            }
-            groups.append(startIndex...currentIndex)
-        } else {
-            groups.append(0...0)
-        }
 
         // Find the inserted and changed indexes
         added.forEach { element in
             if let index = items.index(where: { $0 == element }) {
-                indexes.added.append(indexPathFor(index))
+                indexes.added.append(index)
             }
         }
         changed.forEach { element in
             if let index = items.index(where: { $0 == element }) {
-                indexes.changed.append(indexPathFor(index))
+                indexes.changed.append(index)
             }
         }
         
@@ -154,32 +133,7 @@ public struct View<T: Equatable> {
         indexes.changed = indexes.changed.sorted(by: <)
     }
 
-    public var numberOfGroups: Int { return groups.count }
-    
-    public func rangeOf(group at: Int) -> ClosedRange<Int> { return groups[at] }
-    
-    internal func indexPathFor(_ index: Int) -> IndexPath {
-        var item = index
-        var section = 0
-        for range in groups {
-            if range.lowerBound + item >= range.upperBound {
-                item -= (range.upperBound - range.lowerBound)
-                section += 1
-            } else {
-                return IndexPath(item: item, section: section)
-            }
-        }
-        return IndexPath(item: item, section: section)
-    }
-
-    internal func indexFor(_ indexPath: IndexPath) -> Int {
-        let range = rangeOf(group: indexPath.section)
-        return range.lowerBound + indexPath.item
-    }
-
     internal var items: [T]
-    internal var groups: [ClosedRange<Int>]
-    private var indexes: Diff<[IndexPath]>
+    private var indexes: Diff<[Int]>
     private let orderBy: (T, T) -> Bool
-    private let groupBy: (T) -> Int
 }
