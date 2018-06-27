@@ -42,6 +42,16 @@ public enum Delta<T: Equatable> {
         case let .element(added, removed, changed, moved): return added.isEmpty && removed.isEmpty && changed.isEmpty && moved.isEmpty
         }
     }
+    
+    public static func +(lhs: Delta, rhs: Delta) -> Delta {
+        switch (lhs, rhs) {
+        case (.initial(let li), .initial(let ri)): return .initial(li + ri)
+        case (.list(let la, let lr), .list(let ra, let rr)): return .list(added: la + ra, removed: lr + rr)
+        case (.element(let la, let lr, let lc, let lm), .element(let ra, let rr, let rc, let rm)): return .element(added: la + ra, removed: lr + rr, changed: lc + rc, moved: lm + rm)
+        default:
+            fatalError()
+        }
+    }
 }
 
 public struct Diff<T: Equatable> {
@@ -66,12 +76,12 @@ public final class View<T: Equatable> {
         self.items = []
         self.indexes = Diff<[Int]>(added: [], removed: [], changed: [], moved: [])
     }
-    
-    public func indexes(mode: Mode) -> Delta<Int> {
+
+    public func changes(mode: Mode, section: Int = 0) -> Delta<IndexPath> {
         switch mode {
-        case .initial: return .initial(items.enumerated().map { $0.0 })
-        case .list: return .list(added: indexes.added, removed: indexes.removed)
-        case .element: return .element(added: indexes.added, removed: indexes.removed, changed: indexes.changed, moved: indexes.moved)
+        case .initial: return .initial(items.enumerated().map { IndexPath(item: $0.0, section: section) })
+        case .list: return .list(added: indexes.added.map { IndexPath(item: $0, section: section) }, removed: indexes.removed.map { IndexPath(item: $0, section: section) })
+        case .element: return .element(added: indexes.added.map { IndexPath(item: $0, section: section) }, removed: indexes.removed.map { IndexPath(item: $0, section: section) }, changed: indexes.changed.map { IndexPath(item: $0, section: section) }, moved: indexes.moved.map { IndexPath(item: $0, section: section) })
         }
     }
     

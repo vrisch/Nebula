@@ -52,20 +52,35 @@ extension Delta where T == CIColor {
 
 var view = View<CIColor>(order: <)
 
-let dataSource = ViewDataSource(view: view, reuseIdentifier: "Cell") { (color: CIColor, cell: UICollectionViewCell) in
-    cell.contentView.backgroundColor = UIColor(ciColor: color)
+class DataSource: NSObject, UICollectionViewDataSource {
+    public func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return view.count
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath)
+        let color = view[indexPath.item]
+        cell.contentView.backgroundColor = UIColor(ciColor: color)
+        return cell
+    }
 }
+
+let dataSource = DataSource()
 liveView.dataSource = dataSource
 
 let delta: Delta<CIColor> = .initial([.random(), .random(), .random()])
 view.apply(delta: delta)
-liveView.apply(delta: view.indexes(mode: .initial))
+liveView.apply(delta: view.indexes(mode: .initial, section: 0))
 
 let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
 timerSource.schedule(deadline: .now(), repeating: .seconds(1), leeway: .milliseconds(100))
 timerSource.setEventHandler {
     view.apply(delta: Delta.random(mode: .list, existing: view))
-    liveView.apply(delta: view.indexes(mode: .list))
+    liveView.apply(delta: view.indexes(mode: .list, section: 0))
 }
 timerSource.resume()
 
