@@ -8,18 +8,18 @@
 
 import Foundation
 
-public enum Change<T: Equatable> {
-    case deleted(T)
-    case inserted(T)
-    case unchanged(T)
-    case updated(T)
+public enum Change<Item: Equatable> {
+    case deleted(Item)
+    case inserted(Item)
+    case unchanged(Item)
+    case updated(Item)
     
-    public var value: T {
+    public var item: Item {
         switch self {
-        case let .deleted(value): return value
-        case let .inserted(value): return value
-        case let .unchanged(value): return value
-        case let .updated(value): return value
+        case let .deleted(item): return item
+        case let .inserted(item): return item
+        case let .unchanged(item): return item
+        case let .updated(item): return item
         }
     }
 }
@@ -30,16 +30,24 @@ public enum Mode: String {
     case list
 }
 
-public enum Delta<T: Equatable> {
-    case initial([T])
-    case list(added: [T], removed: [T])
-    case element(added: [T], removed: [T], changed: [T], moved: [T])
-    
+public enum Delta<Item: Equatable> {
+    case initial([Item])
+    case list(added: [Item], removed: [Item])
+    case element(added: [Item], removed: [Item], changed: [Item], moved: [Item])
+
     public var isEmpty: Bool {
         switch self {
         case let .initial(items): return items.isEmpty
         case let .list(added, removed): return added.isEmpty && removed.isEmpty
         case let .element(added, removed, changed, moved): return added.isEmpty && removed.isEmpty && changed.isEmpty && moved.isEmpty
+        }
+    }
+    
+    public func map<AnotherItem>(_ transform: (Item) -> AnotherItem) -> Delta<AnotherItem> {
+        switch self {
+        case let .initial(items): return .initial(items.map(transform))
+        case let .list(added, removed): return .list(added: added.map(transform), removed: removed.map(transform))
+        case let .element(added, removed, changed, moved): return .element(added: added.map(transform), removed: removed.map(transform), changed: changed.map(transform), moved: moved.map(transform))
         }
     }
     

@@ -68,21 +68,21 @@ extension Sequence {
             case (.initial, .deleted):
                 break
             case (.initial, _):
-                changed.append(change.value)
+                changed.append(change.item)
                 
             case (.element, .deleted):
-                removed.append(change.value)
+                removed.append(change.item)
             case (.element, .inserted):
-                added.append(change.value)
+                added.append(change.item)
             case (.element, .unchanged):
-                if hasMovement { moved.append(change.value) }
+                if hasMovement { moved.append(change.item) }
             case (.element, .updated):
-                changed.append(change.value)
+                changed.append(change.item)
                 
             case (.list, .deleted):
-                removed.append(change.value)
+                removed.append(change.item)
             case (.list, .inserted):
-                added.append(change.value)
+                added.append(change.item)
             default: break
             }
             
