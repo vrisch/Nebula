@@ -1,11 +1,3 @@
-//
-//  Extensions.swift
-//  Nebula-iOS
-//
-//  Created by Magnus Nilsson on 2017-08-28.
-//  Copyright © 2017 Nebula. All rights reserved.
-//
-
 import Foundation
 
 extension View: Sequence {
@@ -36,33 +28,30 @@ extension View: Collection {
     }
 }
 
-extension Delta: CustomStringConvertible {
+extension ListDelta: CustomStringConvertible {
     
     public var description: String {
         switch self {
-        case let .initial(items): return "Δ:initial: \(items.count)"
-        case let .list(added, removed): return "Δ:list: \(added.count) added, \(removed.count) removed"
-        case let .element(added, removed, changed, moved): return "Δ:element: \(added.count) added, \(removed.count) removed, \(changed.count) changed, \(moved.count) moved"
+        case let .all(items): return "all: \(items.count)"
+        case let .delta(added, removed): return "Δ: \(added.count) added, \(removed.count) removed"
         }
         
     }
 }
 
 extension Diff: CustomStringConvertible where T == Int {
-    
+
     public var description: String {
-        return "∑: \(added) added, \(removed) removed, \(changed) changed, \(moved) moved"
+        return "∑: \(added) added, \(removed) removed, \(changed) changed"
     }
 }
 
 extension Sequence {
     
-    public func delta<T>(mode: Mode) -> Delta<T> where Element == Change<T> {
+    public func delta<T>(mode: Mode) -> ListDelta<T> where Element == Change<T> {
         var changed: [T] = []
         var added: [T] = []
         var removed: [T] = []
-        var moved: [T] = []
-        var hasMovement = false
         forEach { change in
             switch (mode, change) {
             case (.initial, .deleted):
@@ -70,48 +59,53 @@ extension Sequence {
             case (.initial, _):
                 changed.append(change.item)
                 
-            case (.element, .deleted):
+            case (.changes, .deleted):
                 removed.append(change.item)
-            case (.element, .inserted):
+            case (.changes, .inserted):
                 added.append(change.item)
-            case (.element, .unchanged):
-                if hasMovement { moved.append(change.item) }
-            case (.element, .updated):
-                changed.append(change.item)
-                
-            case (.list, .deleted):
-                removed.append(change.item)
-            case (.list, .inserted):
-                added.append(change.item)
-            default: break
-            }
-            
-            switch change {
-            case .inserted, .deleted: hasMovement = true
             default: break
             }
         }
         switch mode {
-        case .initial: return .initial(changed)
-        case .list: return .list(added: added, removed: removed)
-        case .element: return .element(added: added, removed: removed, changed: changed, moved: moved)
+        case .initial: return .all(changed)
+        case .changes: return .delta(added: added, removed: removed)
+        }
+    }
+    
+    public func delta<T>(where predicate: (T) -> Bool, mode: Mode) -> ItemDelta<T> where Element == Change<T> {
+        guard let change = first(where: { predicate($0.item) }) else { return .nothing }
+        guard case .changes = mode else { return .changed(change.item) }
+        switch change {
+        case let .deleted(item): return .removed(item)
+        case let .inserted(item): return .changed(item)
+        case let .updated(item): return .changed(item)
+        case .unchanged: return .nothing
         }
     }
     
     public func count<T>(mode: Mode) -> Count where Element == Change<T> {
-        switch self.delta(mode: mode) {
-        case let .initial(items): return Count(added: items.count, removed: 0, changed: 0, moved: 0)
-        case let .list(added, removed): return Count(added: added.count, removed: removed.count, changed: 0, moved: 0)
-        case let .element(added, removed, changed, moved):
-            return Count(added: added.count, removed: removed.count, changed: changed.count, moved: moved.count)
+        var added = 0
+        var removed = 0
+        var changed = 0
+        forEach { change in
+            switch change {
+            case .deleted: removed += 1
+            case .inserted: added += 1
+            case .updated: changed += 1
+            case .unchanged: break
+            }
+        }
+        switch mode {
+        case .initial: return Count(added: added + removed + changed, removed: 0, changed: 0)
+        case .changes: return Count(added: added, removed: removed, changed: changed)
         }
     }
-    
+
     public func needsNormalization<T>() -> Bool where Element == Change<T> {
-        let count = self.count(mode: .element)
-        return count.changed > 0 || count.added > 0 || count.removed > 0
+        let count = self.count(mode: .changes)
+        return count.added > 0 || count.removed > 0 || count.changed > 0
     }
-    
+
     public func normalized<T>() -> [Change<T>] where Element == Change<T> {
         var result: [Change<T>] = []
         forEach { change in

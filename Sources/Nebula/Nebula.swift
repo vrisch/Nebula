@@ -1,11 +1,3 @@
-//
-//  Nebula.swift
-//  Nebula
-//
-//  Created by Vrisch on 2017-06-30.
-//  Copyright © 2017 Nebula. All rights reserved.
-//
-
 import Foundation
 
 public enum Change<Item: Equatable> {
@@ -26,53 +18,52 @@ public enum Change<Item: Equatable> {
 
 public enum Mode: String {
     case initial
-    case element
-    case list
+    case changes
 }
 
-public enum Delta<Item: Equatable> {
-    case initial([Item])
-    case list(added: [Item], removed: [Item])
-    case element(added: [Item], removed: [Item], changed: [Item], moved: [Item])
+public enum ListDelta<Item: Equatable> {
+    case all([Item])
+    case delta(added: [Item], removed: [Item])
 
     public var isEmpty: Bool {
         switch self {
-        case let .initial(items): return items.isEmpty
-        case let .list(added, removed): return added.isEmpty && removed.isEmpty
-        case let .element(added, removed, changed, moved): return added.isEmpty && removed.isEmpty && changed.isEmpty && moved.isEmpty
+        case let .all(items): return items.isEmpty
+        case let .delta(added, removed): return added.isEmpty && removed.isEmpty
         }
     }
     
-    public func map<AnotherItem>(_ transform: (Item) -> AnotherItem) -> Delta<AnotherItem> {
+    public func map<AnotherItem>(_ transform: (Item) -> AnotherItem) -> ListDelta<AnotherItem> {
         switch self {
-        case let .initial(items): return .initial(items.map(transform))
-        case let .list(added, removed): return .list(added: added.map(transform), removed: removed.map(transform))
-        case let .element(added, removed, changed, moved): return .element(added: added.map(transform), removed: removed.map(transform), changed: changed.map(transform), moved: moved.map(transform))
+        case let .all(items): return .all(items.map(transform))
+        case let .delta(added, removed): return .delta(added: added.map(transform), removed: removed.map(transform))
         }
     }
     
-    public static func +(lhs: Delta, rhs: Delta) -> Delta {
+    public static func +(lhs: ListDelta, rhs: ListDelta) -> ListDelta {
         switch (lhs, rhs) {
-        case (.initial(let li), .initial(let ri)): return .initial(li + ri)
-        case (.list(let la, let lr), .list(let ra, let rr)): return .list(added: la + ra, removed: lr + rr)
-        case (.element(let la, let lr, let lc, let lm), .element(let ra, let rr, let rc, let rm)): return .element(added: la + ra, removed: lr + rr, changed: lc + rc, moved: lm + rm)
+        case (.all(let li), .all(let ri)): return .all(li + ri)
+        case (.delta(let la, let lr), .delta(let ra, let rr)): return .delta(added: la + ra, removed: lr + rr)
         default:
             fatalError()
         }
     }
 }
 
+public enum ItemDelta<Item: Equatable> {
+    case changed(Item)
+    case removed(Item)
+    case nothing
+}
+
 public struct Diff<T: Equatable> {
     public var added: T
     public var removed: T
     public var changed: T
-    public var moved: T
     
-    public init(added: T, removed: T, changed: T, moved: T) {
+    public init(added: T, removed: T, changed: T) {
         self.added = added
         self.removed = removed
         self.changed = changed
-        self.moved = moved
     }
 }
 
@@ -82,32 +73,37 @@ public final class View<T: Equatable> {
     public init(order: @escaping (T, T) -> Bool) {
         self.orderBy = order
         self.items = []
-        self.indexes = Diff<[Int]>(added: [], removed: [], changed: [], moved: [])
+        self.indexes = Diff<[Int]>(added: [], removed: [], changed: [])
     }
 
-    public func changes(mode: Mode, section: Int = 0) -> Delta<IndexPath> {
+    public func changes(mode: Mode, section: Int = 0) -> ListDelta<IndexPath> {
         switch mode {
-        case .initial: return .initial(items.enumerated().map { IndexPath(item: $0.0, section: section) })
-        case .list: return .list(added: indexes.added.map { IndexPath(item: $0, section: section) }, removed: indexes.removed.map { IndexPath(item: $0, section: section) })
-        case .element: return .element(added: indexes.added.map { IndexPath(item: $0, section: section) }, removed: indexes.removed.map { IndexPath(item: $0, section: section) }, changed: indexes.changed.map { IndexPath(item: $0, section: section) }, moved: indexes.moved.map { IndexPath(item: $0, section: section) })
+        case .initial: return .all(items.enumerated().map { IndexPath(item: $0.0, section: section) })
+        case .changes: return .delta(added: indexes.added.map { IndexPath(item: $0, section: section) }, removed: indexes.removed.map { IndexPath(item: $0, section: section) })
         }
     }
     
-    public func apply(delta: Delta<T>) {
-        indexes = Diff<[Int]>(added: [], removed: [], changed: [], moved: [])
-        
+    public func apply(delta: ListDelta<T>) {
         switch delta {
-        case let .initial(items):
-            process(added: items, removed: [], changed: [], moved: [])
-        case let .list(added, removed):
-            process(added: added, removed: removed, changed: [], moved: [])
-        case let .element(added, removed, changed, moved):
-            process(added: added, removed: removed, changed: changed, moved: moved)
+        case let .all(items):
+            process(added: items, removed: [], changed: [])
+        case let .delta(added, removed):
+            process(added: added, removed: removed, changed: [])
+        }
+    }
+    
+    public func apply(delta: ItemDelta<T>) {
+        switch delta {
+        case let .changed(item):
+            process(added: [], removed: [], changed: [item])
+        case let .removed(item):
+            process(added: [], removed: [item], changed: [])
+        case .nothing:
+            break
         }
     }
 
-
-    private func process(added: [T], removed: [T], changed: [T], moved: [T]) {
+    private func process(added: [T], removed: [T], changed: [T]) {
         // Deletes must be processed first, since the indexes are relative to the old content
         removed.forEach { element in
             if let index = items.index(where: { $0 == element }) {
