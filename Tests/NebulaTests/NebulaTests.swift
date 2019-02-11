@@ -20,26 +20,27 @@ class NebulaTests: XCTestCase {
         var state: [String: Test] = [:]
         let data: [Change<Test>] = []
         let delta = data.delta(mode: .initial)
-        if case let .initial(items) = delta {
+        if case let .all(items) = delta {
             items.forEach { state[$0.id] = $0 }
             XCTAssertEqual(delta.isEmpty, true)
         } else {
             XCTFail()
         }
     }
-    
+
     func testView1() {
         let view = View<String>(order: <)
-        let delta: Delta<String> = .initial(["Banana", "Apple", "Strawberry"])
-        
+
+        let delta: ListDelta<String> = .all(["Banana", "Apple", "Strawberry"])
         view.apply(delta: delta)
-        let changes = view.changes(mode: .initial, section: 0)
-        
+
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(view[0], "Apple")
         XCTAssertEqual(view[1], "Banana")
         XCTAssertEqual(view[2], "Strawberry")
-        if case let .initial(items) = changes {
+
+        let changes = view.list(mode: .initial, section: 0)
+        if case let .all(items) = changes {
             XCTAssertEqual(items.count, 3)
             XCTAssertEqual(items, [
                 IndexPath(item: 0, section: 0),
@@ -50,25 +51,24 @@ class NebulaTests: XCTestCase {
             XCTFail()
         }
     }
-    
+
     func testView2() {
         let view = View<String>(order: <)
-        let delta1: Delta<String> = .initial(["Banana", "Apple", "Strawberry"])
-        
+
+        let delta1: ListDelta<String> = .all(["Banana", "Apple", "Strawberry"])
         view.apply(delta: delta1)
         
-        let delta2: Delta<String> = .list(added: ["Cherry"], removed: [])
-        
+        let delta2: ListDelta<String> = .delta(added: ["Cherry"], removed: [])
         view.apply(delta: delta2)
-        let changes = view.changes(mode: .list, section: 1)
-        
+
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(view.count, 4)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry", "Strawberry"])
-        
-        if case let .list(added, removed) = changes {
+
+        let changes = view.list(mode: .changes)
+        if case let .delta(added, removed) = changes {
             XCTAssertEqual(added, [
-                IndexPath(item: 2, section: 1)
+                IndexPath(item: 2, section: 0)
             ])
             XCTAssertEqual(removed, [])
         } else {
@@ -78,29 +78,27 @@ class NebulaTests: XCTestCase {
 
     func testView3() {
         let view = View<String>(order: <)
-        let delta1: Delta<String> = .initial(["Banana", "Apple", "Strawberry"])
-        
+
+        let delta1: ListDelta<String> = .all(["Banana", "Apple", "Strawberry"])
         view.apply(delta: delta1)
-        
-        let delta2: Delta<String> = .element(added: ["Cherry"], removed: ["Strawberry"], changed: ["Apple"], moved: [])
-        
+
+        let delta2: ItemDelta<String> = .changed("Apple")
+        let delta3: ListDelta<String> = .delta(added: ["Cherry"], removed: ["Strawberry"])
+
         view.apply(delta: delta2)
-        let changes = view.changes(mode: .element, section: 2)
-        
+        view.apply(delta: delta3)
+
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry"])
-        
-        if case let .element(added, removed, changed, moved) = changes {
-            XCTAssertEqual(changed, [
-                IndexPath(item: 0, section: 2)
-            ])
+
+        let changes = view.list(mode: .changes)
+        if case let .delta(added, removed) = changes {
             XCTAssertEqual(added, [
-                IndexPath(item: 2, section: 2)
+                IndexPath(item: 2, section: 0)
             ])
             XCTAssertEqual(removed, [
-                IndexPath(item: 2, section: 2)
+                IndexPath(item: 2, section: 0)
             ])
-            XCTAssertEqual(moved, [])
         } else {
             XCTFail()
         }
@@ -108,32 +106,25 @@ class NebulaTests: XCTestCase {
 
     func testView4() {
         let view = View<String>(order: <)
-        let delta1: Delta<String> = .initial(["Banana", "Apple", "Strawberry"])
-        
+
+        let delta1: ListDelta<String> = .all(["Banana", "Apple", "Strawberry"])
         view.apply(delta: delta1)
-        
-        let delta2: Delta<String> = .element(added: ["Cherry"], removed: ["Strawberry"], changed: ["Apple"], moved: [])
-        
+
+        let delta2: ListDelta<String> = .delta(added: ["Cherry"], removed: ["Strawberry"])
         view.apply(delta: delta2)
-        
-        let delta3: Delta<String> = .element(added: ["Pineapple"], removed: [], changed: ["Cherry", "Banana"], moved: [])
-        
+
+        let delta3: ListDelta<String> = .delta(added: ["Pineapple"], removed: [])
         view.apply(delta: delta3)
-        let changes = view.changes(mode: .element, section: 0)
-        
+
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry", "Pineapple"])
-        
-        if case let .element(added, removed, changed, moved) = changes {
-            XCTAssertEqual(changed, [
-                IndexPath(item: 1, section: 0),
-                IndexPath(item: 2, section: 0)
-            ])
+
+        let changes = view.list(mode: .changes)
+        if case let .delta(added, removed) = changes {
             XCTAssertEqual(added, [
                 IndexPath(item: 3, section: 0)
             ])
             XCTAssertEqual(removed, [])
-            XCTAssertEqual(moved, [])
         } else {
             XCTFail()
         }
@@ -141,45 +132,44 @@ class NebulaTests: XCTestCase {
 
     func testView5() {
         let view = View<String>(order: <)
-        let delta1: Delta<String> = .initial(["Pineapple", "Cherry", "Banana", "Apple", "Strawberry"])
-        
+
+        let delta1: ListDelta<String> = .all(["Pineapple", "Cherry", "Banana", "Apple", "Strawberry"])
         view.apply(delta: delta1)
         
-        let delta2: Delta<String> = .list(added: [], removed: ["Cherry", "Strawberry", "Pineapple", "Apple"])
-        
+        let delta2: ListDelta<String> = .delta(added: [], removed: ["Cherry", "Strawberry", "Pineapple", "Apple"])
         view.apply(delta: delta2)
-        let changes = view.changes(mode: .list, section: 0)
-        
+
         XCTAssertEqual(view.isEmpty, false)
         XCTAssertEqual(Array(view), ["Banana"])
-        
-        if case let .list(added, removed) = changes {
+
+        let changes = view.list(mode: .changes, section: 1)
+        if case let .delta(added, removed) = changes {
             XCTAssertEqual(added, [])
             XCTAssertEqual(removed, [
-                IndexPath(item: 0, section: 0),
-                IndexPath(item: 2, section: 0),
-                IndexPath(item: 3, section: 0),
-                IndexPath(item: 4, section: 0)
+                IndexPath(item: 0, section: 1),
+                IndexPath(item: 2, section: 1),
+                IndexPath(item: 3, section: 1),
+                IndexPath(item: 4, section: 1)
             ])
         } else {
             XCTFail()
         }
     }
-    
+
     func testView6() {
         let view1 = View<String>(order: <)
         let view2 = View<String>(order: <)
-        let delta1: Delta<String> = .initial(["Banana", "Apple", "Strawberry"])
-        let delta2: Delta<String> = .initial(["Cherry", "Pineapple"])
+        let delta1: ListDelta<String> = .all(["Banana", "Apple", "Strawberry"])
+        let delta2: ListDelta<String> = .all(["Cherry", "Pineapple"])
 
         view1.apply(delta: delta1)
         view2.apply(delta: delta2)
-        let changes1 = view1.changes(mode: .initial, section: 0)
-        let changes2 = view2.changes(mode: .initial, section: 1)
+        let changes1 = view1.list(mode: .initial, section: 0)
+        let changes2 = view2.list(mode: .initial, section: 1)
 
-        let changes: Delta<IndexPath> = changes1 + changes2
+        let changes: ListDelta<IndexPath> = changes1 + changes2
 
-        if case let .initial(items) = changes {
+        if case let .all(items) = changes {
             XCTAssertEqual(items.count, 5)
             XCTAssertEqual(items, [
                 IndexPath(item: 0, section: 0),
@@ -188,6 +178,31 @@ class NebulaTests: XCTestCase {
                 IndexPath(item: 0, section: 1),
                 IndexPath(item: 1, section: 1),
                 ])
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testView7() {
+        let view = View<String>(order: <)
+        
+        let delta1: ListDelta<String> = .all(["Banana", "Apple", "Strawberry"])
+        view.apply(delta: delta1)
+
+        let delta2: ListDelta<String> = .delta(added: ["Cherry"], removed: [])
+        view.apply(delta: delta2)
+
+        let delta3: ListDelta<String> = .delta(added: [], removed: [])
+        view.apply(delta: delta3)
+
+        XCTAssertEqual(view.isEmpty, false)
+        XCTAssertEqual(view.count, 4)
+        XCTAssertEqual(Array(view), ["Apple", "Banana", "Cherry", "Strawberry"])
+        
+        let changes = view.list(mode: .changes)
+        if case let .delta(added, removed) = changes {
+            XCTAssertEqual(added, [])
+            XCTAssertEqual(removed, [])
         } else {
             XCTFail()
         }

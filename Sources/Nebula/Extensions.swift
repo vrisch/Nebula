@@ -9,8 +9,6 @@ extension View: Sequence {
 }
 
 extension View: Collection {
-    public typealias Index = Int
-    
     public var startIndex: Int {
         return items.startIndex
     }
@@ -19,7 +17,7 @@ extension View: Collection {
         return items.endIndex
     }
 
-    public subscript (position: Int) -> Iterator.Element {
+    public subscript (position: Int) -> Element {
         return items[position]
     }
 
@@ -47,7 +45,6 @@ extension Diff: CustomStringConvertible where T == Int {
 }
 
 extension Sequence {
-    
     public func delta<T>(mode: Mode) -> ListDelta<T> where Element == Change<T> {
         var changed: [T] = []
         var added: [T] = []

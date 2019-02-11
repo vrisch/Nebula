@@ -76,7 +76,7 @@ public final class View<T: Equatable> {
         self.indexes = Diff<[Int]>(added: [], removed: [], changed: [])
     }
 
-    public func changes(mode: Mode, section: Int = 0) -> ListDelta<IndexPath> {
+    public func list(mode: Mode, section: Int = 0) -> ListDelta<IndexPath> {
         switch mode {
         case .initial: return .all(items.enumerated().map { IndexPath(item: $0.0, section: section) })
         case .changes: return .delta(added: indexes.added.map { IndexPath(item: $0, section: section) }, removed: indexes.removed.map { IndexPath(item: $0, section: section) })
@@ -104,6 +104,9 @@ public final class View<T: Equatable> {
     }
 
     private func process(added: [T], removed: [T], changed: [T]) {
+        // Reset indexes
+        indexes = Diff<[Int]>(added: [], removed: [], changed: [])
+
         // Deletes must be processed first, since the indexes are relative to the old content
         removed.forEach { element in
             if let index = items.index(where: { $0 == element }) {
@@ -150,4 +153,10 @@ public final class View<T: Equatable> {
     internal var items: [T]
     private var indexes: Diff<[Int]>
     private let orderBy: (T, T) -> Bool
+}
+
+extension View: CustomStringConvertible {
+    public var description: String {
+        return "items:\(items.count), added:\(indexes.added.count), removed:\(indexes.removed.count), changed:\(indexes.changed.count)"
+    }
 }
