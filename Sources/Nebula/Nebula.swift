@@ -109,7 +109,7 @@ public final class View<T: Equatable> {
 
         // Deletes must be processed first, since the indexes are relative to the old content
         removed.forEach { element in
-            if let index = items.index(where: { $0 == element }) {
+            if let index = items.firstIndex(where: { $0 == element }) {
                 indexes.removed.append(index)
             }
         }
@@ -125,7 +125,7 @@ public final class View<T: Equatable> {
             items.append(element)
         }
         changed.forEach { element in
-            if let index = items.index(where: { $0 == element }) {
+            if let index = items.firstIndex(where: { $0 == element }) {
                 items[index] = element
             }
         }
@@ -135,12 +135,12 @@ public final class View<T: Equatable> {
 
         // Find the inserted and changed indexes
         added.forEach { element in
-            if let index = items.index(where: { $0 == element }) {
+            if let index = items.firstIndex(where: { $0 == element }) {
                 indexes.added.append(index)
             }
         }
         changed.forEach { element in
-            if let index = items.index(where: { $0 == element }) {
+            if let index = items.firstIndex(where: { $0 == element }) {
                 indexes.changed.append(index)
             }
         }

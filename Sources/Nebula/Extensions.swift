@@ -1,9 +1,10 @@
 import Foundation
 
 extension View: Sequence {
+    public typealias Element = T
     public typealias Iterator = Array<T>.Iterator
-    
-    public func makeIterator() -> Iterator {
+
+    public func makeIterator() -> IndexingIterator<Array<T>> {
         return items.makeIterator()
     }
 }

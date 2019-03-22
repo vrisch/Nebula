@@ -3,7 +3,7 @@ import UIKit
 
 public extension UICollectionView {
 
-    public func apply(delta: ListDelta<IndexPath>) {
+    func apply(delta: ListDelta<IndexPath>) {
         switch delta {
         case .all:
             reloadData()
