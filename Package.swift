@@ -1,5 +1,15 @@
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(
-    name: "Nebula"
+    name: "Nebula",
+    products: [
+        .library(
+            name: "Nebula",
+            targets: ["Nebula"]),
+        ],
+    targets: [
+        .target(
+            name: "Nebula")
+        ]
 )
