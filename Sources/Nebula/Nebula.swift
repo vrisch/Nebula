@@ -86,7 +86,8 @@ public final class View<T: Equatable> {
     public func apply(delta: ListDelta<T>) {
         switch delta {
         case let .all(items):
-            process(added: items, removed: [], changed: [])
+            // All is a complete replacing of existing items
+            process(added: items, removed: self.items, changed: [])
         case let .delta(added, removed):
             process(added: added, removed: removed, changed: [])
         }
