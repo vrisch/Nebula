@@ -24,7 +24,7 @@ public enum Mode: String {
 public enum ListDelta<Item: Equatable> {
     case all([Item])
     case delta(added: [Item], removed: [Item])
-
+    
     public var isEmpty: Bool {
         switch self {
         case let .all(items): return items.isEmpty
@@ -75,7 +75,7 @@ public final class View<T: Equatable> {
         self.items = []
         self.indexes = Diff<[Int]>(added: [], removed: [], changed: [])
     }
-
+    
     public func list(mode: Mode, section: Int = 0) -> ListDelta<IndexPath> {
         switch mode {
         case .initial: return .all(items.enumerated().map { IndexPath(item: $0.0, section: section) })
@@ -103,24 +103,24 @@ public final class View<T: Equatable> {
             break
         }
     }
-
+    
     private func process(added: [T], removed: [T], changed: [T]) {
         // Reset indexes
         indexes = Diff<[Int]>(added: [], removed: [], changed: [])
-
+        
         // Deletes must be processed first, since the indexes are relative to the old content
         removed.forEach { element in
             if let index = items.firstIndex(where: { $0 == element }) {
                 indexes.removed.append(index)
             }
         }
-
+        
         // Sort removed indexes
         indexes.removed = indexes.removed.sorted(by: <)
         
         // Now that the removed indexes are recorded, we can go ahead and delete the elements (in reverse order)
         indexes.removed.reversed().forEach { items.remove(at: $0) }
-
+        
         // Now process inserts and changes without recording indexes
         added.forEach { element in
             items.append(element)
@@ -133,7 +133,7 @@ public final class View<T: Equatable> {
         
         // Sort the new updated content
         items = items.sorted(by: orderBy)
-
+        
         // Find the inserted and changed indexes
         added.forEach { element in
             if let index = items.firstIndex(where: { $0 == element }) {
@@ -150,7 +150,7 @@ public final class View<T: Equatable> {
         indexes.added = indexes.added.sorted(by: <)
         indexes.changed = indexes.changed.sorted(by: <)
     }
-
+    
     internal var items: [T]
     private var indexes: Diff<[Int]>
     private let orderBy: (T, T) -> Bool

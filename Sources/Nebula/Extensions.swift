@@ -45,6 +45,24 @@ extension Diff: CustomStringConvertible where T == Int {
     }
 }
 
+public extension Change {
+    func needsNormalization() -> Bool {
+        switch self {
+        case .deleted, .inserted, .updated: return true
+        case .unchanged: return false
+        }
+    }
+    
+    func normalized() -> Change? {
+        switch self {
+        case .deleted: return nil
+        case let .inserted(value): return .unchanged(value)
+        case let .unchanged(value): return .unchanged(value)
+        case let .updated(value): return .unchanged(value)
+        }
+    }
+}
+
 extension Sequence {
     public func delta<T>(mode: Mode) -> ListDelta<T> where Element == Change<T> {
         var changed: [T] = []
