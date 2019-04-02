@@ -28,43 +28,40 @@ extension View: Collection {
 }
 
 extension ListDelta: CustomStringConvertible {
-    
     public var description: String {
         switch self {
         case let .all(items): return "all: \(items.count)"
         case let .delta(added, removed): return "Δ: \(added.count) added, \(removed.count) removed"
         }
-        
     }
 }
 
 extension Diff: CustomStringConvertible where T == Int {
-
     public var description: String {
         return "∑: \(added) added, \(removed) removed, \(changed) changed"
     }
 }
 
-public extension Change {
-    func needsNormalization() -> Bool {
+public extension Optional {
+    func needsNormalization<T>() -> Bool where Wrapped == Change<T> {
         switch self {
-        case .deleted, .inserted, .updated: return true
-        case .unchanged: return false
+        case .some(.deleted), .some(.inserted), .some(.updated): return true
+        case .some(.unchanged), .none: return false
         }
     }
     
-    func normalized() -> Change? {
+    func normalized<T>() -> Change<T>? where Wrapped == Change<T> {
         switch self {
-        case .deleted: return nil
-        case let .inserted(value): return .unchanged(value)
-        case let .unchanged(value): return .unchanged(value)
-        case let .updated(value): return .unchanged(value)
+        case .some(.deleted), .none: return nil
+        case let .some(.inserted(value)): return .unchanged(value)
+        case let .some(.unchanged(value)): return .unchanged(value)
+        case let .some(.updated(value)): return .unchanged(value)
         }
     }
 }
 
-extension Sequence {
-    public func delta<T>(mode: Mode) -> ListDelta<T> where Element == Change<T> {
+public extension Sequence {
+   func delta<T>(mode: Mode) -> ListDelta<T> where Element == Change<T> {
         var changed: [T] = []
         var added: [T] = []
         var removed: [T] = []
@@ -88,7 +85,7 @@ extension Sequence {
         }
     }
     
-    public func delta<T>(where predicate: (T) -> Bool, mode: Mode) -> ItemDelta<T> where Element == Change<T> {
+    func delta<T>(where predicate: (T) -> Bool, mode: Mode) -> ItemDelta<T> where Element == Change<T> {
         guard let change = first(where: { predicate($0.item) }) else { return .nothing }
         guard case .changes = mode else { return .changed(change.item) }
         switch change {
@@ -99,7 +96,7 @@ extension Sequence {
         }
     }
     
-    public func count<T>(mode: Mode) -> Count where Element == Change<T> {
+    func count<T>(mode: Mode) -> Count where Element == Change<T> {
         var added = 0
         var removed = 0
         var changed = 0
@@ -117,12 +114,12 @@ extension Sequence {
         }
     }
 
-    public func needsNormalization<T>() -> Bool where Element == Change<T> {
+    func needsNormalization<T>() -> Bool where Element == Change<T> {
         let count = self.count(mode: .changes)
         return count.added > 0 || count.removed > 0 || count.changed > 0
     }
 
-    public func normalized<T>() -> [Change<T>] where Element == Change<T> {
+    func normalized<T>() -> [Change<T>] where Element == Change<T> {
         var result: [Change<T>] = []
         forEach { change in
             switch change {
